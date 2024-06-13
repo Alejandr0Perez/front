@@ -2,58 +2,67 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, Alert } from 'react-native';
 import { Button, Card, TextInput, Title, Paragraph } from 'react-native-paper';
 
-const API_URL = 'https://alejandro-perezs-projects-ef7b4d2f.vercel.app/back/api/inventory'; // Actualiza con tu URL de Vercel
+const API_URL = 'https://back-weld.vercel.app/api/inventory'; // Asegúrate de usar la URL correcta
 
 export default function InventoryScreen() {
   const [inventory, setInventory] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', quantity: '', price: '' });
 
   useEffect(() => {
-    fetch(API_URL)
-      .then(response => response.json())
-      .then(data => setInventory(data))
-      .catch(error => console.error('Error fetching inventory:', error));
+    fetchInventory();
   }, []);
 
-  const addItem = () => {
-    if (newItem.name && newItem.quantity && newItem.price) {
-      fetch(API_URL, {
+  const fetchInventory = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setInventory(data);
+    } catch (error) {
+      console.error('Error fetching inventory:', error);
+    }
+  };
+
+  const addItem = async () => {
+    try {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newItem),
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          setInventory([...inventory, data]);
-          setNewItem({ name: '', quantity: '', price: '' });
-        })
-        .catch(error => {
-          console.error('Error adding item:', error);
-          Alert.alert('Error', 'Hubo un problema al agregar el artículo. Por favor, intenta de nuevo más tarde.');
-        });
-    } else {
-      Alert.alert('Error', 'Por favor, completa todos los campos para agregar un item.');
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setInventory([...inventory, data]);
+      setNewItem({ name: '', quantity: '', price: '' });
+    } catch (error) {
+      console.error('Error adding item:', error);
+      Alert.alert('Error', 'Hubo un problema al agregar el artículo. Por favor, intenta de nuevo más tarde.');
     }
   };
 
-  const deleteItem = (id) => {
-    fetch(`${API_URL}/${id}`, {
-      method: 'DELETE',
-    })
-      .then(() => {
-        setInventory(inventory.filter(item => item._id !== id));
-      })
-      .catch(error => {
-        console.error('Error deleting item:', error);
-        Alert.alert('Error', 'Hubo un problema al eliminar el artículo. Por favor, intenta de nuevo más tarde.');
+  const deleteItem = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
       });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      setInventory(inventory.filter(item => item._id !== id));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      Alert.alert('Error', 'Hubo un problema al eliminar el artículo. Por favor, intenta de nuevo más tarde.');
+    }
   };
 
   const calculateTotal = (item) => {
@@ -137,4 +146,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-

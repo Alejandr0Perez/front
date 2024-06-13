@@ -1,69 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, Alert } from 'react-native';
-import { Button, Card, TextInput, Title, Paragraph } from 'react-native-paper';
+import { Button, Card, Title, Paragraph } from 'react-native-paper';
 
-const API_URL = 'https://alejandro-perezs-projects-ef7b4d2f.vercel.app/back/api/quotes'; // Reemplaza con tu URL de Vercel
+const API_URL = 'https://back-weld.vercel.app/api/quotes'; // Asegúrate de usar la URL correcta
 
 export default function QuotesScreen() {
-  const [quotes, setQuotes] = useState([
-    { id: '1', client: 'Juan Pérez', description: 'Construcción de casa', total: '15000.00' },
-    { id: '2', client: 'María García', description: 'Remodelación de oficina', total: '8000.00' },
-    { id: '3', client: 'Carlos López', description: 'Diseño de interiores', total: '5000.00' }
-  ]);
+  const [quotes, setQuotes] = useState([]);
+  const [newQuote, setNewQuote] = useState({ customerName: '', items: [], total: 0 });
 
-  const [newQuote, setNewQuote] = useState({ client: '', description: '', total: '' });
+  useEffect(() => {
+    fetchQuotes();
+  }, []);
 
-  const addQuote = () => {
-    if (newQuote.client && newQuote.description && newQuote.total) {
-      setQuotes([...quotes, { id: Date.now().toString(), ...newQuote }]);
-      setNewQuote({ client: '', description: '', total: '' });
-    } else {
-      Alert.alert('Error', 'Por favor, completa todos los campos para agregar una cotización.');
+  const fetchQuotes = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setQuotes(data);
+    } catch (error) {
+      console.error('Error fetching quotes:', error);
     }
   };
 
-  const deleteQuote = (id) => {
-    setQuotes(quotes.filter(quote => quote.id !== id));
+  const addQuote = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newQuote),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setQuotes([...quotes, data]);
+      setNewQuote({ customerName: '', items: [], total: 0 });
+    } catch (error) {
+      console.error('Error adding quote:', error);
+      Alert.alert('Error', 'Hubo un problema al agregar la cotización. Por favor, intenta de nuevo más tarde.');
+    }
+  };
+
+  const deleteQuote = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      setQuotes(quotes.filter(quote => quote._id !== id));
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      Alert.alert('Error', 'Hubo un problema al eliminar la cotización. Por favor, intenta de nuevo más tarde.');
+    }
+  };
+
+  const calculateTotal = (items) => {
+    return items.reduce((acc, item) => acc + item.quantity * item.price, 0).toFixed(2);
   };
 
   return (
     <View style={styles.container}>
-      <Title style={styles.title}>Control de Cotizaciones</Title>
-      <Title style={styles.subtitle}>Agregar Nueva Cotización</Title>
-      <TextInput
-        label="Nombre del Cliente"
-        mode="outlined"
-        value={newQuote.client}
-        onChangeText={text => setNewQuote({ ...newQuote, client: text })}
-        style={styles.input}
-      />
-      <TextInput
-        label="Descripción"
-        mode="outlined"
-        value={newQuote.description}
-        onChangeText={text => setNewQuote({ ...newQuote, description: text })}
-        style={styles.input}
-      />
-      <TextInput
-        label="Total"
-        mode="outlined"
-        keyboardType="numeric"
-        value={newQuote.total}
-        onChangeText={text => setNewQuote({ ...newQuote, total: text })}
-        style={styles.input}
-      />
+      <Title style={styles.title}>Cotizaciones</Title>
+      <Title style={styles.subtitle}>Nueva Cotización</Title>
+      {/* Aquí debes implementar los componentes necesarios para capturar los datos de la nueva cotización */}
       <Button mode="contained" onPress={addQuote} style={styles.button}>Agregar Cotización</Button>
-      <Title style={styles.subtitle}>Cotizaciones</Title>
+      <Title style={styles.subtitle}>Listado de Cotizaciones</Title>
       <FlatList
         data={quotes}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id}
         renderItem={({ item }) => (
           <Card style={styles.card}>
             <Card.Content>
-              <Paragraph>{item.client} - {item.description} - ${item.total}</Paragraph>
+              <Paragraph>{item.customerName}</Paragraph>
+              {item.items.map((subItem, index) => (
+                <Paragraph key={index}>
+                  {subItem.name} - {subItem.quantity} unidades - ${subItem.price} cada uno
+                </Paragraph>
+              ))}
+              <Paragraph>Total: ${calculateTotal(item.items)}</Paragraph>
             </Card.Content>
             <Card.Actions>
-              <Button color="red" onPress={() => deleteQuote(item.id)}>Eliminar</Button>
+              <Button color="red" onPress={() => deleteQuote(item._id)}>Eliminar</Button>
             </Card.Actions>
           </Card>
         )}
@@ -91,9 +119,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     color: '#343a40',
-  },
-  input: {
-    marginBottom: 10,
   },
   button: {
     marginBottom: 20,
