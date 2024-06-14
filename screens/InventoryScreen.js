@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, Alert } from 'react-native';
 import { Button, Card, TextInput, Title, Paragraph } from 'react-native-paper';
 
-const API_URL = 'https://back-weld.vercel.app/api/inventory'; // Asegúrate de usar la URL correcta
+const API_URL = 'https://back-1-kfe7.onrender.com/api/inventory'; // Ejemplo de URL para el endpoint de inventory en Render
+
 
 export default function InventoryScreen() {
   const [inventory, setInventory] = useState([]);

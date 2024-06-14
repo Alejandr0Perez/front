@@ -5,7 +5,7 @@ import { TextInput, Title, Button } from 'react-native-paper';
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [users, setUsers] = useState([{ username: 'admin', password: 'admin' }]); // Default user for demo purposes
+  const [users, setUsers] = useState([{ username: 'ale', password: '12345' }]); // Default user for demo purposes
 
   const handleLogin = () => {
     const user = users.find(user => user.username === username && user.password === password);

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, Alert } from 'react-native';
-import { Button, Card, Title, Paragraph } from 'react-native-paper';
+import { Button, Card, TextInput, Title, Paragraph } from 'react-native-paper';
 
-const API_URL = 'https://back-weld.vercel.app/api/quotes'; // Asegúrate de usar la URL correcta
+const API_URL = 'https://back-1-kfe7.onrender.com/api/quotes'; // URL para el endpoint de cotizaciones
 
 export default function QuotesScreen() {
   const [quotes, setQuotes] = useState([]);
-  const [newQuote, setNewQuote] = useState({ customerName: '', items: [], total: 0 });
+  const [newQuote, setNewQuote] = useState({ customerName: '', project: '', amount: '' });
 
   useEffect(() => {
     fetchQuotes();
@@ -41,7 +41,7 @@ export default function QuotesScreen() {
 
       const data = await response.json();
       setQuotes([...quotes, data]);
-      setNewQuote({ customerName: '', items: [], total: 0 });
+      setNewQuote({ customerName: '', project: '', amount: '' });
     } catch (error) {
       console.error('Error adding quote:', error);
       Alert.alert('Error', 'Hubo un problema al agregar la cotización. Por favor, intenta de nuevo más tarde.');
@@ -65,15 +65,29 @@ export default function QuotesScreen() {
     }
   };
 
-  const calculateTotal = (items) => {
-    return items.reduce((acc, item) => acc + item.quantity * item.price, 0).toFixed(2);
-  };
-
   return (
     <View style={styles.container}>
       <Title style={styles.title}>Cotizaciones</Title>
       <Title style={styles.subtitle}>Nueva Cotización</Title>
-      {/* Aquí debes implementar los componentes necesarios para capturar los datos de la nueva cotización */}
+      <TextInput
+        label="Nombre del Cliente"
+        value={newQuote.customerName}
+        onChangeText={text => setNewQuote({ ...newQuote, customerName: text })}
+        style={styles.input}
+      />
+      <TextInput
+        label="Proyecto"
+        value={newQuote.project}
+        onChangeText={text => setNewQuote({ ...newQuote, project: text })}
+        style={styles.input}
+      />
+      <TextInput
+        label="Cantidad"
+        keyboardType="numeric"
+        value={newQuote.amount}
+        onChangeText={text => setNewQuote({ ...newQuote, amount: text })}
+        style={styles.input}
+      />
       <Button mode="contained" onPress={addQuote} style={styles.button}>Agregar Cotización</Button>
       <Title style={styles.subtitle}>Listado de Cotizaciones</Title>
       <FlatList
@@ -82,13 +96,9 @@ export default function QuotesScreen() {
         renderItem={({ item }) => (
           <Card style={styles.card}>
             <Card.Content>
-              <Paragraph>{item.customerName}</Paragraph>
-              {item.items.map((subItem, index) => (
-                <Paragraph key={index}>
-                  {subItem.name} - {subItem.quantity} unidades - ${subItem.price} cada uno
-                </Paragraph>
-              ))}
-              <Paragraph>Total: ${calculateTotal(item.items)}</Paragraph>
+              <Paragraph>Cliente: {item.customerName}</Paragraph>
+              <Paragraph>Proyecto: {item.project}</Paragraph>
+              <Paragraph>Cantidad: ${item.amount}</Paragraph>
             </Card.Content>
             <Card.Actions>
               <Button color="red" onPress={() => deleteQuote(item._id)}>Eliminar</Button>
@@ -119,6 +129,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     color: '#343a40',
+  },
+  input: {
+    marginBottom: 10,
   },
   button: {
     marginBottom: 20,
